@@ -1,0 +1,2832 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>🎬 Generador de video</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary: #8b5cf6;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --sidebar: #f1f5f9;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --success-hover: #059669;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: all 0.2s ease;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        body.dark-mode {
+            --primary: #818cf8;
+            --primary-hover: #6366f1;
+            --secondary: #a78bfa;
+            --bg: #0f172a;
+            --card: #1e293b;
+            --sidebar: #0c1224;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #34d399;
+            --success-hover: #10b981;
+            --warning: #fbbf24;
+            --danger: #f87171;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        /* Contenedor principal */
+        .app-container {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            min-height: calc(100vh - 65px);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            background: var(--sidebar);
+            border-right: 1px solid var(--border);
+            padding: 20px 0;
+            position: sticky;
+            top: 65px;
+            height: calc(100vh - 65px);
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 20px;
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: var(--transition);
+            border-left: 3px solid transparent;
+            margin: 2px 0;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: rgba(99, 102, 241, 0.05);
+            color: var(--primary);
+        }
+
+        .nav-item.active {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            border-left: 3px solid var(--primary);
+            font-weight: 600;
+        }
+
+        .nav-item i {
+            width: 18px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .nav-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Módulos/Secciones */
+        .module {
+            display: none;
+        }
+
+        .module.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Contenido principal */
+        .main-content {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: calc(100vh - 65px);
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-title i {
+            color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-title i {
+            color: var(--primary);
+        }
+
+        /* Grids y formularios */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .form-label i {
+            color: var(--primary);
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            padding: 12px 14px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-size: 14px;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        /* Countdown Input */
+        .countdown-input-group {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .countdown-generate {
+            height: 46px;
+            white-space: nowrap;
+        }
+
+        .countdown-preview {
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        /* CAMPOS DE TIEMPO - MEJORADO PARA OCUPAR TODO EL ANCHO */
+        .time-fields-section {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .time-fields-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* ESTILOS ESPECÍFICOS PARA EL MODAL - OCUPAR TODO EL ANCHO */
+        #question-modal .time-fields-section {
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        #question-modal .time-fields-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+
+        #question-modal .time-field-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+        }
+
+        .time-field-group {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            border: 1px solid rgba(99, 102, 241, 0.1);
+        }
+
+        .time-field-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .time-field-icon {
+            color: var(--primary);
+            font-size: 16px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 6px;
+        }
+
+        .time-field-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .time-field-input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .time-field-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+
+        .time-field-input {
+            padding: 14px 16px;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-size: 16px;
+            transition: var(--transition);
+            font-family: inherit;
+            width: 100%;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .time-field-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .time-field-hint {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            line-height: 1.4;
+        }
+
+        .time-field-hint i {
+            color: var(--primary);
+        }
+
+        /* Estilos específicos para inputs de tiempo */
+        input[type="number"].time-field-input {
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"].time-field-input::-webkit-outer-spin-button,
+        input[type="number"].time-field-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* File Upload */
+        .file-upload-container {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            background: var(--bg);
+            position: relative;
+        }
+
+        .file-upload-container:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.02);
+        }
+
+        .file-upload-icon {
+            font-size: 36px;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .file-upload-text {
+            font-size: 14px;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .file-upload-subtext {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .file-upload-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .file-upload-button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .file-preview {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .file-icon {
+            color: var(--primary);
+            font-size: 20px;
+        }
+
+        .file-details {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .file-remove {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .file-remove:hover {
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* Botones */
+        .btn {
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-secondary {
+            background: var(--card);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg);
+            border-color: var(--primary);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: var(--success-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+            min-width: 120px;
+        }
+
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Video Preview - Mobile Size */
+        video {
+            max-width: 375px;
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Video actions */
+        .video-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        /* Questions */
+        .questions-container {
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .questions-empty {
+            padding: 40px 20px;
+        }
+
+        .empty-icon {
+            font-size: 64px;
+            color: var(--border);
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-text {
+            color: var(--text-muted);
+            font-size: 16px;
+            margin-bottom: 24px;
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        /* Modal principal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 24px;
+            max-width: 800px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid var(--border);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .modal-close:hover {
+            background: var(--bg);
+            color: var(--danger);
+        }
+
+        /* Form rows in modal */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-full {
+            grid-column: 1 / -1;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--card);
+            border-left: 4px solid var(--primary);
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            z-index: 1001;
+            max-width: 350px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-success {
+            border-color: var(--success);
+        }
+
+        .notification-error {
+            border-color: var(--danger);
+        }
+
+        .notification-warning {
+            border-color: var(--warning);
+        }
+
+        .notification-icon {
+            font-size: 20px;
+        }
+
+        .notification-success .notification-icon {
+            color: var(--success);
+        }
+
+        .notification-error .notification-icon {
+            color: var(--danger);
+        }
+
+        .notification-warning .notification-icon {
+            color: var(--warning);
+        }
+
+        .notification-message {
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+        }
+
+        /* Toggle Switch */
+        .theme-toggle {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .theme-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .theme-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--border);
+            transition: var(--transition);
+            border-radius: 34px;
+        }
+
+        .theme-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: var(--transition);
+            border-radius: 50%;
+        }
+
+        input:checked+.theme-slider {
+            background: var(--primary);
+        }
+
+        input:checked+.theme-slider:before {
+            transform: translateX(24px);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 65px;
+                left: 0;
+                right: 0;
+                height: auto;
+                z-index: 99;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                padding: 0;
+                overflow-x: auto;
+            }
+
+            .nav-list {
+                display: flex;
+                padding: 0;
+            }
+
+            .nav-item {
+                padding: 12px 16px;
+                border-left: none;
+                border-bottom: 2px solid transparent;
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+
+            .nav-item.active {
+                border-left: none;
+                border-bottom: 2px solid var(--primary);
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 12px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .countdown-input-group {
+                grid-template-columns: 1fr;
+            }
+
+            .time-fields-container {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            /* Ajustes para el modal en móviles */
+            #question-modal .time-fields-container {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .main-content {
+                padding: 16px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+
+            .video-actions {
+                flex-direction: column;
+            }
+
+            .video-actions .btn {
+                width: 100%;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">
+                <i class="fas fa-video"></i>
+            </div>
+            <div class="logo-text">Generador de video</div>
+        </div>
+        <div class="header-controls">
+            <div class="theme-toggle">
+                <input type="checkbox" id="theme-switch">
+                <label class="theme-slider" for="theme-switch"></label>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenedor principal -->
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="nav-list">
+                <div class="nav-item active" onclick="App.showModule('config')">
+                    <i class="fas fa-sliders-h"></i>
+                    <span class="nav-label">Configuración</span>
+                </div>
+                <div class="nav-item" onclick="App.showModule('intro')">
+                    <i class="fas fa-play-circle"></i>
+                    <span class="nav-label">Introducción</span>
+                </div>
+                <div class="nav-item" onclick="App.showModule('questions')">
+                    <i class="fas fa-question-circle"></i>
+                    <span class="nav-label">Preguntas</span>
+                </div>
+                <div class="nav-item" onclick="App.showModule('mid')">
+                    <i class="fas fa-pause-circle"></i>
+                    <span class="nav-label">Intermedio</span>
+                </div>
+                <div class="nav-item" onclick="App.showModule('final')">
+                    <i class="fas fa-flag-checkered"></i>
+                    <span class="nav-label">Final</span>
+                </div>
+                <div class="nav-item" onclick="App.showModule('render')">
+                    <i class="fas fa-rocket"></i>
+                    <span class="nav-label">Generar</span>
+                </div>
+                <div class="nav-item" onclick="App.showModule('jobs')">
+                    <i class="fas fa-history"></i>
+                    <span class="nav-label">Videos</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Contenido principal -->
+        <main class="main-content">
+            <!-- MÓDULO: Configuración -->
+            <div id="config-module" class="module active">
+                <div class="page-header">
+                    <div class="page-title">
+                        <i class="fas fa-sliders-h"></i>
+                        <span>Configuración</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-music"></i>
+                            Música de Fondo
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-file-audio"></i>
+                                Música de fondo
+                            </label>
+                            <div class="file-upload-container">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="file-upload-text">
+                                    Haz clic para cargar un archivo de audio
+                                </div>
+                                <div class="file-upload-subtext">
+                                    Formatos aceptados: MP3, WAV, OGG
+                                </div>
+                                <div class="file-upload-button">
+                                    <i class="fas fa-upload"></i>
+                                    Seleccionar archivo
+                                </div>
+                                <input type="file" class="file-input" id="bgMusicFile" accept="audio/*"
+                                    onchange="App.handleFileUpload(this, 'bgMusic')">
+                            </div>
+                            <div id="bgMusicPreview" class="file-preview" style="display: none;"></div>
+                            <input type="hidden" id="bgMusicUrl">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-volume-up"></i>
+                                Volumen (0-1)
+                            </label>
+                            <input type="number" class="form-input" id="bgVolume" min="0" max="1" step="0.1"
+                                value="0.2">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-clock"></i>
+                                Duración (segundos)
+                            </label>
+                            <input type="number" class="form-input" id="bgDuration" min="1" value="3">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-bell"></i>
+                            Efectos de Sonido
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-clock"></i>
+                                Sonido de carga de pregunta (Tick)
+                            </label>
+                            <div class="file-upload-container">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="file-upload-text">
+                                    Haz clic para cargar un archivo de audio
+                                </div>
+                                <div class="file-upload-subtext">
+                                    Formatos aceptados: MP3, WAV, OGG
+                                </div>
+                                <div class="file-upload-button">
+                                    <i class="fas fa-upload"></i>
+                                    Seleccionar archivo
+                                </div>
+                                <input type="file" class="file-input" id="tickAudioFile" accept="audio/*"
+                                    onchange="App.handleFileUpload(this, 'tickAudio')">
+                            </div>
+                            <div id="tickAudioPreview" class="file-preview" style="display: none;"></div>
+                            <input type="hidden" id="tickAudioUrl">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-check-circle"></i>
+                                Sonido de check de pregunta (Correcto)
+                            </label>
+                            <div class="file-upload-container">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="file-upload-text">
+                                    Haz clic para cargar un archivo de audio
+                                </div>
+                                <div class="file-upload-subtext">
+                                    Formatos aceptados: MP3, WAV, OGG
+                                </div>
+                                <div class="file-upload-button">
+                                    <i class="fas fa-upload"></i>
+                                    Seleccionar archivo
+                                </div>
+                                <input type="file" class="file-input" id="correctAudioFile" accept="audio/*"
+                                    onchange="App.handleFileUpload(this, 'correctAudio')">
+                            </div>
+                            <div id="correctAudioPreview" class="file-preview" style="display: none;"></div>
+                            <input type="hidden" id="correctAudioUrl">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÓDULO: Introducción -->
+            <div id="intro-module" class="module">
+                <div class="page-header">
+                    <div class="page-title">
+                        <i class="fas fa-play-circle"></i>
+                        <span>Introducción</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-heading"></i>
+                                Título
+                            </label>
+                            <input type="text" class="form-input" id="introTitle"
+                                placeholder="Evaluemos tus conocimientos">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-bullhorn"></i>
+                                Texto "¿Listo?"
+                            </label>
+                            <input type="text" class="form-input" id="introReadyText" placeholder="¿Listo?">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-list-ol"></i>
+                                Cuenta regresiva
+                            </label>
+                            <div class="countdown-input-group">
+                                <div>
+                                    <label
+                                        style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">
+                                        Número de segundos
+                                    </label>
+                                    <input type="number" class="form-input" id="countdownSeconds" min="1" max="10"
+                                        value="3">
+                                </div>
+                                <button type="button" class="btn btn-secondary countdown-generate"
+                                    onclick="App.generateCountdown()">
+                                    <i class="fas fa-magic"></i>
+                                    Generar
+                                </button>
+                            </div>
+                            <div id="countdownPreview" class="countdown-preview">
+                                <strong>Vista previa:</strong> 3, 2, 1, GO!
+                            </div>
+                            <input type="hidden" id="countdownTexts" value='["3","2","1","GO!"]'>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-image"></i>
+                                Imagen de fondo
+                            </label>
+                            <div class="file-upload-container">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="file-upload-text">
+                                    Haz clic para cargar una imagen
+                                </div>
+                                <div class="file-upload-subtext">
+                                    Formatos aceptados: JPG, PNG, GIF
+                                </div>
+                                <div class="file-upload-button">
+                                    <i class="fas fa-upload"></i>
+                                    Seleccionar archivo
+                                </div>
+                                <input type="file" class="file-input" id="introImgFile" accept="image/*"
+                                    onchange="App.handleFileUpload(this, 'introImg')">
+                            </div>
+                            <div id="introImgPreview" class="file-preview" style="display: none;"></div>
+                            <input type="hidden" id="introImgUrl">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-file-audio"></i>
+                                Audio de introducción
+                            </label>
+                            <div class="file-upload-container">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="file-upload-text">
+                                    Haz clic para cargar un archivo de audio
+                                </div>
+                                <div class="file-upload-subtext">
+                                    Formatos aceptados: MP3, WAV, OGG
+                                </div>
+                                <div class="file-upload-button">
+                                    <i class="fas fa-upload"></i>
+                                    Seleccionar archivo
+                                </div>
+                                <input type="file" class="file-input" id="introAudioFile" accept="audio/*"
+                                    onchange="App.handleFileUpload(this, 'introAudio')">
+                            </div>
+                            <div id="introAudioPreview" class="file-preview" style="display: none;"></div>
+                            <input type="hidden" id="introAudioUrl">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-clock"></i>
+                                Duración (segundos)
+                            </label>
+                            <input type="number" class="form-input" id="introDuration" min="1" value="4">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÓDULO: Preguntas -->
+            <div id="questions-module" class="module">
+                <div class="page-header">
+                    <div class="page-title">
+                        <i class="fas fa-question-circle"></i>
+                        <span>Preguntas</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="questions-container" id="questions-container">
+                        <div class="questions-empty">
+                            <div class="empty-icon">
+                                <i class="fas fa-question-circle"></i>
+                            </div>
+                            <p class="empty-text">Aún no has creado ninguna pregunta</p>
+                            <button class="btn btn-primary" onclick="App.openQuestionModal()">
+                                <i class="fas fa-plus"></i>
+                                Crear primera pregunta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÓDULO: Intermedio -->
+            <div id="mid-module" class="module">
+                <div class="page-header">
+                    <div class="page-title">
+                        <i class="fas fa-pause-circle"></i>
+                        <span>Sección Intermedia</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-comment"></i>
+                                Texto
+                            </label>
+                            <input type="text" class="form-input" id="midText"
+                                placeholder="¿Cuántas preguntas llegaste a responder?">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-image"></i>
+                                Imagen
+                            </label>
+                            <div class="file-upload-container">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="file-upload-text">
+                                    Haz clic para cargar una imagen
+                                </div>
+                                <div class="file-upload-subtext">
+                                    Formatos aceptados: JPG, PNG, GIF
+                                </div>
+                                <div class="file-upload-button">
+                                    <i class="fas fa-upload"></i>
+                                    Seleccionar archivo
+                                </div>
+                                <input type="file" class="file-input" id="midImgFile" accept="image/*"
+                                    onchange="App.handleFileUpload(this, 'midImg')">
+                            </div>
+                            <div id="midImgPreview" class="file-preview" style="display: none;"></div>
+                            <input type="hidden" id="midImgUrl">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-file-audio"></i>
+                                Audio
+                            </label>
+                            <div class="file-upload-container">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="file-upload-text">
+                                    Haz clic para cargar un archivo de audio
+                                </div>
+                                <div class="file-upload-subtext">
+                                    Formatos aceptados: MP3, WAV, OGG
+                                </div>
+                                <div class="file-upload-button">
+                                    <i class="fas fa-upload"></i>
+                                    Seleccionar archivo
+                                </div>
+                                <input type="file" class="file-input" id="midAudioFile" accept="audio/*"
+                                    onchange="App.handleFileUpload(this, 'midAudio')">
+                            </div>
+                            <div id="midAudioPreview" class="file-preview" style="display: none;"></div>
+                            <input type="hidden" id="midAudioUrl">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-clock"></i>
+                                Duración (segundos)
+                            </label>
+                            <input type="number" class="form-input" id="midDuration" min="1" value="4">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÓDULO: Final -->
+            <div id="final-module" class="module">
+                <div class="page-header">
+                    <div class="page-title">
+                        <i class="fas fa-flag-checkered"></i>
+                        <span>Video Final</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-image"></i>
+                                Logo
+                            </label>
+                            <div class="file-upload-container">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="file-upload-text">
+                                    Haz clic para cargar un logo
+                                </div>
+                                <div class="file-upload-subtext">
+                                    Formatos aceptados: JPG, PNG, GIF
+                                </div>
+                                <div class="file-upload-button">
+                                    <i class="fas fa-upload"></i>
+                                    Seleccionar archivo
+                                </div>
+                                <input type="file" class="file-input" id="finalLogoFile" accept="image/*"
+                                    onchange="App.handleFileUpload(this, 'finalLogo')">
+                            </div>
+                            <div id="finalLogoPreview" class="file-preview" style="display: none;"></div>
+                            <input type="hidden" id="finalLogoUrl">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-file-audio"></i>
+                                Audio Final
+                            </label>
+                            <div class="file-upload-container">
+                                <div class="file-upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <div class="file-upload-text">
+                                    Haz clic para cargar un archivo de audio
+                                </div>
+                                <div class="file-upload-subtext">
+                                    Formatos aceptados: MP3, WAV, OGG
+                                </div>
+                                <div class="file-upload-button">
+                                    <i class="fas fa-upload"></i>
+                                    Seleccionar archivo
+                                </div>
+                                <input type="file" class="file-input" id="finalAudioFile" accept="audio/*"
+                                    onchange="App.handleFileUpload(this, 'finalAudio')">
+                            </div>
+                            <div id="finalAudioPreview" class="file-preview" style="display: none;"></div>
+                            <input type="hidden" id="finalAudioUrl">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="fas fa-clock"></i>
+                                Duración (segundos)
+                            </label>
+                            <input type="number" class="form-input" id="finalDuration" min="1" value="5">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÓDULO: Generar -->
+            <div id="render-module" class="module">
+                <div class="page-header">
+                    <div class="page-title">
+                        <i class="fas fa-rocket"></i>
+                        <span>Generar Video</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="App.startRender()" id="renderBtn">
+                        <i class="fas fa-play"></i>
+                        Generar Video
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="fas fa-info-circle"></i>
+                            Resumen del Proyecto
+                        </div>
+                    </div>
+                    <div id="project-summary">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                            <div
+                                style="text-align: center; padding: 16px; background: rgba(99, 102, 241, 0.05); border-radius: 8px;">
+                                <div style="font-size: 24px; font-weight: bold; color: var(--primary);"
+                                    id="summary-questions">0</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">Preguntas</div>
+                            </div>
+                            <div
+                                style="text-align: center; padding: 16px; background: rgba(99, 102, 241, 0.05); border-radius: 8px;">
+                                <div style="font-size: 24px; font-weight: bold; color: var(--primary);"
+                                    id="summary-duration">0s</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">Duración</div>
+                            </div>
+                            <div
+                                style="text-align: center; padding: 16px; background: rgba(99, 102, 241, 0.05); border-radius: 8px;">
+                                <div style="font-size: 24px; font-weight: bold; color: var(--primary);"
+                                    id="summary-status">-</div>
+                                <div style="font-size: 12px; color: var(--text-muted);">Estado</div>
+                            </div>
+                        </div>
+                        <div id="summary-message"
+                            style="margin-top: 16px; padding: 12px; background: rgba(245, 158, 11, 0.05); border-radius: 8px; border-left: 3px solid var(--warning);">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i>
+                                <strong>Agrega preguntas primero</strong>
+                            </div>
+                            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                                Necesitas al menos una pregunta para generar el video.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MÓDULO: Videos -->
+            <div id="jobs-module" class="module">
+                <div class="page-header">
+                    <div class="page-title">
+                        <i class="fas fa-history"></i>
+                        <span>Videos Generados</span>
+                    </div>
+                    <button class="btn btn-secondary" onclick="App.loadJobs()">
+                        <i class="fas fa-sync-alt"></i>
+                        Actualizar
+                    </button>
+                </div>
+
+                <div class="card">
+                    <div id="jobs-container">
+                        <div class="questions-empty">
+                            <div class="empty-icon">
+                                <i class="fas fa-video"></i>
+                            </div>
+                            <p class="empty-text">No hay videos generados</p>
+                            <p class="empty-text">Genera tu primer video desde la pestaña "Generar"</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal para nueva pregunta -->
+    <div class="modal" id="question-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Nueva Pregunta</h2>
+                <button class="modal-close" onclick="App.closeQuestionModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="form-grid" style="gap: 24px;">
+                <div class="form-group form-full">
+                    <label class="form-label">
+                        <i class="fas fa-question"></i>
+                        Pregunta
+                    </label>
+                    <input type="text" class="form-input" id="qText" placeholder="Escribe tu pregunta aquí">
+                </div>
+
+                <div class="form-group form-full">
+                    <label class="form-label">
+                        <i class="fas fa-image"></i>
+                        Imagen de la pregunta
+                    </label>
+                    <div class="file-upload-container">
+                        <div class="file-upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="file-upload-text">
+                            Haz clic para cargar una imagen
+                        </div>
+                        <div class="file-upload-subtext">
+                            Formatos aceptados: JPG, PNG, GIF
+                        </div>
+                        <div class="file-upload-button">
+                            <i class="fas fa-upload"></i>
+                            Seleccionar archivo
+                        </div>
+                        <input type="file" class="file-input" id="qImageFile" accept="image/*"
+                            onchange="App.handleModalFileUpload(this, 'qImage')">
+                    </div>
+                    <div id="qImagePreview" class="file-preview" style="display: none;"></div>
+                    <input type="hidden" id="qImageUrl">
+                </div>
+
+                <div class="form-group form-full">
+                    <label class="form-label">
+                        <i class="fas fa-list-ul"></i>
+                        Opciones de respuesta
+                    </label>
+                    <div class="form-row" style="margin-top: 8px;">
+                        <div class="form-group">
+                            <label class="form-label" style="font-size: 12px; color: var(--text-muted);">Opción
+                                1</label>
+                            <input type="text" class="form-input" id="o1" placeholder="Primera opción">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" style="font-size: 12px; color: var(--text-muted);">Opción
+                                2</label>
+                            <input type="text" class="form-input" id="o2" placeholder="Segunda opción">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" style="font-size: 12px; color: var(--text-muted);">Opción
+                                3</label>
+                            <input type="text" class="form-input" id="o3" placeholder="Tercera opción">
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" style="font-size: 12px; color: var(--text-muted);">Opción
+                                4</label>
+                            <input type="text" class="form-input" id="o4" placeholder="Cuarta opción">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group form-full">
+                    <label class="form-label">
+                        <i class="fas fa-check-circle"></i>
+                        Respuesta correcta
+                    </label>
+                    <select class="form-select" id="qCorrect">
+                        <option value="0">Opción 1</option>
+                        <option value="1">Opción 2</option>
+                        <option value="2">Opción 3</option>
+                        <option value="3">Opción 4</option>
+                    </select>
+                </div>
+
+                <!-- CAMPOS DE TIEMPO MEJORADOS - AHORA OCUPAN TODO EL ANCHO -->
+                <div class="form-group form-full">
+                    <div class="time-fields-section">
+                        <div class="time-fields-container">
+                            <div class="time-field-group">
+                                <div class="time-field-header">
+                                    <div class="time-field-icon">
+                                        <i class="fas fa-clock"></i>
+                                    </div>
+                                    <div class="time-field-title">Tiempo de cuenta regresiva</div>
+                                </div>
+                                <div class="time-field-input-container">
+                                    <div class="time-field-label">Segundos antes de responder</div>
+                                    <input type="number" class="time-field-input" id="qCountdownSeconds" min="1"
+                                        max="60" value="15">
+                                </div>
+                                <div class="time-field-hint">
+                                    <i class="fas fa-info-circle"></i>
+                                    Tiempo que tendrá el usuario para responder
+                                </div>
+                            </div>
+
+                            <div class="time-field-group">
+                                <div class="time-field-header">
+                                    <div class="time-field-icon">
+                                        <i class="fas fa-eye"></i>
+                                    </div>
+                                    <div class="time-field-title">Tiempo de revelación</div>
+                                </div>
+                                <div class="time-field-input-container">
+                                    <div class="time-field-label">Segundos para mostrar respuesta</div>
+                                    <input type="number" class="time-field-input" id="qRevealSeconds" min="1" max="10"
+                                        value="3">
+                                </div>
+                                <div class="time-field-hint">
+                                    <i class="fas fa-info-circle"></i>
+                                    Tiempo que se mostrará la respuesta correcta
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group form-full">
+                    <label class="form-label">
+                        <i class="fas fa-file-audio"></i>
+                        Narración (audio)
+                    </label>
+                    <div class="file-upload-container">
+                        <div class="file-upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="file-upload-text">
+                            Haz clic para cargar un archivo de audio
+                        </div>
+                        <div class="file-upload-subtext">
+                            Formatos aceptados: MP3, WAV, OGG
+                        </div>
+                        <div class="file-upload-button">
+                            <i class="fas fa-upload"></i>
+                            Seleccionar archivo
+                        </div>
+                        <input type="file" class="file-input" id="qNarrationFile" accept="audio/*"
+                            onchange="App.handleModalFileUpload(this, 'qNarration')">
+                    </div>
+                    <div id="qNarrationPreview" class="file-preview" style="display: none;"></div>
+                    <input type="hidden" id="qNarrationUrl">
+                </div>
+
+                <div class="form-group form-full">
+                    <label class="form-label">
+                        <i class="fas fa-volume-up"></i>
+                        Explicación (audio)
+                    </label>
+                    <div class="file-upload-container">
+                        <div class="file-upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="file-upload-text">
+                            Haz clic para cargar un archivo de audio
+                        </div>
+                        <div class="file-upload-subtext">
+                            Formatos aceptados: MP3, WAV, OGG
+                        </div>
+                        <div class="file-upload-button">
+                            <i class="fas fa-upload"></i>
+                            Seleccionar archivo
+                        </div>
+                        <input type="file" class="file-input" id="qExplainFile" accept="audio/*"
+                            onchange="App.handleModalFileUpload(this, 'qExplain')">
+                    </div>
+                    <div id="qExplainPreview" class="file-preview" style="display: none;"></div>
+                    <input type="hidden" id="qExplainUrl">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 24px;">
+                <button class="btn btn-secondary" style="flex: 1;" onclick="App.closeQuestionModal()">
+                    <i class="fas fa-times"></i>
+                    Cancelar
+                </button>
+                <button class="btn btn-primary" style="flex: 1;" onclick="App.saveQuestion()">
+                    <i class="fas fa-save"></i>
+                    Guardar Pregunta
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación -->
+    <div class="notification" id="notification">
+        <div class="notification-icon">
+            <i class="fas fa-info-circle"></i>
+        </div>
+        <div class="notification-message" id="notification-message">Mensaje de notificación</div>
+    </div>
+
+    <script>
+        const App = (function () {
+            const API_BASE_URL = 'http://localhost:8000';
+            let questions = [];
+            let currentJobId = null;
+            let editingIndex = -1; // -1 significa que estamos creando, >=0 significa editando
+
+            // Inicialización
+            function init() {
+                initTheme();
+                showModule('config');
+                generateCountdown();
+                updateProjectSummary();
+            }
+
+            // Generar cuenta regresiva
+            function generateCountdown() {
+                const seconds = parseInt(document.getElementById('countdownSeconds').value) || 3;
+                const preview = document.getElementById('countdownPreview');
+
+                let countdownTexts = [];
+                for (let i = seconds; i > 0; i--) {
+                    countdownTexts.push(i.toString());
+                }
+                countdownTexts.push('GO!');
+
+                document.getElementById('countdownTexts').value = JSON.stringify(countdownTexts);
+                preview.innerHTML = `<strong>Vista previa:</strong> ${countdownTexts.join(', ')}`;
+            }
+
+            // Manejo del tema
+            function initTheme() {
+                const themeSwitch = document.getElementById('theme-switch');
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const savedTheme = localStorage.getItem('theme');
+
+                if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+                    document.body.classList.add('dark-mode');
+                    themeSwitch.checked = true;
+                }
+
+                themeSwitch.addEventListener('change', function () {
+                    if (this.checked) {
+                        document.body.classList.add('dark-mode');
+                        localStorage.setItem('theme', 'dark');
+                    } else {
+                        document.body.classList.remove('dark-mode');
+                        localStorage.setItem('theme', 'light');
+                    }
+                });
+            }
+
+
+            // Navegación
+            function showModule(moduleId) {
+                // Ocultar todos los módulos
+                document.querySelectorAll('.module').forEach(module => {
+                    module.classList.remove('active');
+                });
+
+                // Mostrar módulo seleccionado
+                const module = document.getElementById(`${moduleId}-module`);
+                if (module) module.classList.add('active');
+
+                // Actualizar navegación
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+
+                const navItem = Array.from(document.querySelectorAll('.nav-item')).find(item =>
+                    item.onclick && item.onclick.toString().includes(`'${moduleId}'`)
+                );
+
+                if (navItem) navItem.classList.add('active');
+
+                // Acciones específicas
+                if (moduleId === 'render') updateProjectSummary();
+                if (moduleId === 'questions') renderQuestions();
+                if (moduleId === 'jobs') loadJobs();
+            }
+
+            // Notificaciones
+            function showNotification(message, type = 'info') {
+                const notification = document.getElementById('notification');
+                const messageEl = document.getElementById('notification-message');
+                const icon = notification.querySelector('.notification-icon i');
+
+                notification.className = 'notification';
+                notification.classList.add(`notification-${type}`);
+
+                const icons = {
+                    success: 'check-circle',
+                    error: 'exclamation-circle',
+                    warning: 'exclamation-triangle',
+                    info: 'info-circle'
+                };
+                icon.className = `fas fa-${icons[type]}`;
+                messageEl.textContent = message;
+                notification.classList.add('show');
+
+                setTimeout(() => notification.classList.remove('show'), 3000);
+            }
+
+            // Carga de archivos
+            async function handleFileUpload(fileInput, fieldName) {
+                const file = fileInput.files[0];
+                if (!file) return;
+
+                const previewId = `${fieldName}Preview`;
+                const urlInputId = `${fieldName}Url`;
+                const preview = document.getElementById(previewId);
+
+                if (!validateFileType(file, fieldName.includes('Img') || fieldName.includes('Logo') || fieldName.includes('Image') ? 'image' : 'audio')) {
+                    showNotification(`Tipo de archivo no válido`, 'error');
+                    return;
+                }
+
+                // Mostrar previsualización
+                preview.style.display = 'block';
+                const fileTypeIcon = fieldName.includes('Img') || fieldName.includes('Logo') || fieldName.includes('Image') ? 'file-image' : 'file-audio';
+                preview.innerHTML = `
+                    <div class="file-info">
+                        <i class="fas fa-${fileTypeIcon} file-icon"></i>
+                        <div class="file-details">
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-size">${(file.size / 1024).toFixed(1)} KB</div>
+                        </div>
+                        <button class="file-remove" onclick="App.removeFile('${fileInput.id}', '${previewId}', '${urlInputId}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+
+                showNotification('Subiendo archivo...', 'info');
+
+                const formData = new FormData();
+                formData.append('file', file, file.name); // Enviar con nombre original
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.text();
+                        throw new Error(error || 'Error al subir archivo');
+                    }
+
+                    const data = await response.json();
+                    const urlInput = document.getElementById(urlInputId);
+                    urlInput.value = data.url;
+                    urlInput.dataset.publicId = data.publicId;
+
+                    // Actualizar el botón de eliminar para pasar el publicId
+                    const removeBtn = preview.querySelector('.file-remove');
+                    if (removeBtn) {
+                        removeBtn.setAttribute('onclick', `App.removeFile('${fileInput.id}', '${previewId}', '${urlInputId}', '${data.publicId}')`);
+                    }
+
+                    showNotification('Archivo subido exitosamente', 'success');
+                } catch (error) {
+                    showNotification('Error al subir archivo: ' + error.message, 'error');
+                    preview.style.display = 'none';
+                }
+            }
+
+            // Carga de archivos en modal
+            async function handleModalFileUpload(fileInput, fieldName) {
+                const file = fileInput.files[0];
+                if (!file) return;
+
+                const previewId = `${fieldName}Preview`;
+                const urlInputId = `${fieldName}Url`;
+                const preview = document.getElementById(previewId);
+
+                if (!validateFileType(file, fieldName.includes('Image') ? 'image' : 'audio')) {
+                    showNotification(`Tipo de archivo no válido`, 'error');
+                    return;
+                }
+
+                preview.style.display = 'block';
+                const fileTypeIcon = fieldName.includes('Image') ? 'file-image' : 'file-audio';
+                preview.innerHTML = `
+                    <div class="file-info">
+                        <i class="fas fa-${fileTypeIcon} file-icon"></i>
+                        <div class="file-details">
+                            <div class="file-name">${file.name}</div>
+                            <div class="file-size">${(file.size / 1024).toFixed(1)} KB</div>
+                        </div>
+                        <button class="file-remove" onclick="App.removeModalFile('${fileInput.id}', '${previewId}', '${urlInputId}')">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+
+                showNotification('Subiendo archivo...', 'info');
+
+                const formData = new FormData();
+                formData.append('file', file, file.name); // Enviar con nombre original
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/upload`, {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.text();
+                        throw new Error(error || 'Error al subir archivo');
+                    }
+
+                    const data = await response.json();
+                    const urlInput = document.getElementById(urlInputId);
+                    urlInput.value = data.url;
+                    urlInput.dataset.publicId = data.publicId;
+
+                    // Actualizar el botón de eliminar
+                    const removeBtn = preview.querySelector('.file-remove');
+                    if (removeBtn) {
+                        removeBtn.setAttribute('onclick', `App.removeModalFile('${fileInput.id}', '${previewId}', '${urlInputId}', '${data.publicId}')`);
+                    }
+
+                    showNotification('Archivo subido exitosamente', 'success');
+                } catch (error) {
+                    showNotification('Error al subir archivo: ' + error.message, 'error');
+                    preview.style.display = 'none';
+                }
+            }
+
+            // Validar tipo de archivo
+            function validateFileType(file, expectedType) {
+                if (expectedType === 'audio') {
+                    return file.type.startsWith('audio/');
+                } else if (expectedType === 'image') {
+                    return file.type.startsWith('image/');
+                }
+                return false;
+            }
+
+            // Eliminar archivo
+            async function removeFile(fileInputId, previewId, urlInputId, publicId = null) {
+                const fileInput = document.getElementById(fileInputId);
+                const preview = document.getElementById(previewId);
+                const urlInput = document.getElementById(urlInputId);
+
+                const pid = publicId || (urlInput ? urlInput.dataset.publicId : null);
+
+                if (pid) {
+                    try {
+                        showNotification('Eliminando archivo del servidor...', 'info');
+                        const response = await fetch(`${API_BASE_URL}/api/delete-file`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ publicId: pid })
+                        });
+
+                        if (!response.ok) console.warn('No se pudo eliminar el archivo del servidor');
+                    } catch (error) {
+                        console.error('Error al llamar a delete-file:', error);
+                    }
+                }
+
+                if (fileInput) fileInput.value = '';
+                if (urlInput) {
+                    urlInput.value = '';
+                    urlInput.dataset.publicId = ''; // Limpiar dataset
+                }
+                if (preview) preview.style.display = 'none';
+                saveToLocalStorage();
+                showNotification('Archivo eliminado del servidor', 'info');
+            }
+
+            // Eliminar archivo en modal
+            async function removeModalFile(fileInputId, previewId, urlInputId, publicId = null) {
+                const fileInput = document.getElementById(fileInputId);
+                const preview = document.getElementById(previewId);
+                const urlInput = document.getElementById(urlInputId);
+
+                const pid = publicId || (urlInput ? urlInput.dataset.publicId : null);
+
+                if (pid) {
+                    try {
+                        showNotification('Eliminando archivo del servidor...', 'info');
+                        await fetch(`${API_BASE_URL}/api/delete-file`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ publicId: pid })
+                        });
+                    } catch (error) {
+                        console.error('Error al llamar a delete-file:', error);
+                    }
+                }
+
+                if (fileInput) fileInput.value = '';
+                if (urlInput) {
+                    urlInput.value = '';
+                    urlInput.dataset.publicId = ''; // Limpiar dataset
+                }
+                if (preview) preview.style.display = 'none';
+                saveToLocalStorage();
+                showNotification('Archivo eliminado del servidor', 'info');
+            }
+
+            // Modal de pregunta
+            function openQuestionModal() {
+                document.getElementById('question-modal').classList.add('active');
+            }
+
+            function closeQuestionModal() {
+                document.getElementById('question-modal').classList.remove('active');
+                clearQuestionModal();
+            }
+
+            function clearQuestionModal() {
+                editingIndex = -1;
+                document.querySelector('.modal-title').textContent = 'Nueva Pregunta';
+
+                document.getElementById('qText').value = '';
+                document.getElementById('qImageUrl').value = '';
+                document.getElementById('qImageFile').value = '';
+                document.getElementById('qImagePreview').style.display = 'none';
+                document.getElementById('o1').value = '';
+                document.getElementById('o2').value = '';
+                document.getElementById('o3').value = '';
+                document.getElementById('o4').value = '';
+                document.getElementById('qCorrect').value = '0';
+                // NUEVO: Limpiar campos de tiempo
+                document.getElementById('qCountdownSeconds').value = '15';
+                document.getElementById('qRevealSeconds').value = '3';
+                document.getElementById('qNarrationUrl').value = '';
+                document.getElementById('qNarrationFile').value = '';
+                document.getElementById('qNarrationPreview').style.display = 'none';
+                const qExplainUrlInput = document.getElementById('qExplainUrl');
+                if (qExplainUrlInput) qExplainUrlInput.value = '';
+                const qExplainFileInput = document.getElementById('qExplainFile');
+                if (qExplainFileInput) qExplainFileInput.value = '';
+                const qExplainPreview = document.getElementById('qExplainPreview');
+                if (qExplainPreview) qExplainPreview.style.display = 'none';
+
+                // Limpiar datasets de publicId
+                document.getElementById('qImageUrl').dataset.publicId = '';
+                document.getElementById('qNarrationUrl').dataset.publicId = '';
+                const qExplainUrl = document.getElementById('qExplainUrl');
+                if (qExplainUrl) qExplainUrl.dataset.publicId = '';
+            }
+
+            // Renderizar lista de preguntas
+            function renderQuestions() {
+                const container = document.getElementById('questions-container');
+                if (!container) return;
+
+                if (questions.length === 0) {
+                    container.innerHTML = `
+                        <div class="questions-empty">
+                            <div class="empty-icon">
+                                <i class="fas fa-question-circle"></i>
+                            </div>
+                            <p class="empty-text">Aún no has creado ninguna pregunta</p>
+                            <button class="btn btn-primary" onclick="App.openQuestionModal()">
+                                <i class="fas fa-plus"></i>
+                                Crear primera pregunta
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; width: 100%;">
+                        <h3 style="margin: 0;">Tus Preguntas (${questions.length})</h3>
+                        <button class="btn btn-primary btn-sm" onclick="App.openQuestionModal()">
+                            <i class="fas fa-plus"></i> Agregar
+                        </button>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr; gap: 16px; width: 100%;">
+                `;
+
+                questions.forEach((q, index) => {
+                    html += `
+                        <div class="card" style="margin-bottom: 0; padding: 16px; border: 1px solid var(--border); box-shadow: none;">
+                            <div style="display: flex; gap: 16px; align-items: flex-start;">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
+                                    ${index + 1}
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-weight: 600; color: var(--text); margin-bottom: 4px;">${q.question}</div>
+                                    <div style="font-size: 13px; color: var(--text-muted);">
+                                        <i class="fas fa-list-ul"></i> ${q.options.length} opciones | 
+                                        <i class="fas fa-check-circle"></i> Correcta: Opción ${q.correctIndex + 1} |
+                                        <i class="fas fa-clock"></i> Cuenta: ${q.countdownSeconds}s |
+                                        <i class="fas fa-eye"></i> Revelar: ${q.revealSeconds}s
+                                    </div>
+                                    ${q.image ? `
+                                        <div style="margin-top: 8px;">
+                                            <img src="${q.image}" style="height: 40px; border-radius: 4px; border: 1px solid var(--border);">
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn btn-secondary btn-icon" title="Editar" onclick="App.editQuestion(${index})">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-secondary btn-icon" style="color: var(--danger);" title="Eliminar" onclick="App.deleteQuestion(${index})">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                container.innerHTML = html;
+            }
+
+            // Editar pregunta
+            function editQuestion(index) {
+                const q = questions[index];
+
+                // Limpiar primero para asegurar un estado limpio, luego asignar index
+                clearQuestionModal();
+                editingIndex = index;
+
+                openQuestionModal();
+                const modalTitle = document.querySelector('#question-modal .modal-title');
+                if (modalTitle) modalTitle.textContent = 'Editar Pregunta';
+
+                document.getElementById('qText').value = q.question || '';
+
+                const qImageUrl = document.getElementById('qImageUrl');
+                qImageUrl.value = q.image || '';
+                if (q.imagePublicId) qImageUrl.dataset.publicId = q.imagePublicId;
+
+                if (q.image) {
+                    const preview = document.getElementById('qImagePreview');
+                    preview.style.display = 'block';
+                    preview.innerHTML = `
+                        <div class="file-info">
+                            <i class="fas fa-file-image file-icon"></i>
+                            <div class="file-details">
+                                <div class="file-name">Imagen actual</div>
+                            </div>
+                            <button class="file-remove" onclick="App.removeModalFile('qImageFile', 'qImagePreview', 'qImageUrl', '${q.imagePublicId || ''}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                document.getElementById('o1').value = (q.options && q.options[0]) || '';
+                document.getElementById('o2').value = (q.options && q.options[1]) || '';
+                document.getElementById('o3').value = (q.options && q.options[2]) || '';
+                document.getElementById('o4').value = (q.options && q.options[3]) || '';
+                document.getElementById('qCorrect').value = (q.correctIndex !== undefined) ? q.correctIndex.toString() : '0';
+
+                // NUEVO: Cargar campos de tiempo
+                document.getElementById('qCountdownSeconds').value = q.countdownSeconds || 15;
+                document.getElementById('qRevealSeconds').value = q.revealSeconds || 3;
+
+                const qNarrationUrl = document.getElementById('qNarrationUrl');
+                qNarrationUrl.value = q.narrationUrl || '';
+                if (q.narrationPublicId) qNarrationUrl.dataset.publicId = q.narrationPublicId;
+
+                if (q.narrationUrl) {
+                    const preview = document.getElementById('qNarrationPreview');
+                    preview.style.display = 'block';
+                    preview.innerHTML = `
+                        <div class="file-info">
+                            <i class="fas fa-file-audio file-icon"></i>
+                            <div class="file-details">
+                                <div class="file-name">Audio actual</div>
+                            </div>
+                            <button class="file-remove" onclick="App.removeModalFile('qNarrationFile', 'qNarrationPreview', 'qNarrationUrl', '${q.narrationPublicId || ''}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                const qExplainUrl = document.getElementById('qExplainUrl');
+                if (qExplainUrl) {
+                    qExplainUrl.value = q.explanationAudioUrl || '';
+                    if (q.explanationPublicId) qExplainUrl.dataset.publicId = q.explanationPublicId;
+
+                    if (q.explanationAudioUrl) {
+                        const preview = document.getElementById('qExplainPreview');
+                        if (preview) {
+                            preview.style.display = 'block';
+                            preview.innerHTML = `
+                                <div class="file-info">
+                                    <i class="fas fa-file-audio file-icon"></i>
+                                    <div class="file-details">
+                                        <div class="file-name">Explicación actual</div>
+                                    </div>
+                                    <button class="file-remove" onclick="App.removeModalFile('qExplainFile', 'qExplainPreview', 'qExplainUrl', '${q.explanationPublicId || ''}')">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            `;
+                        }
+                    }
+                }
+            }
+
+            // Eliminar pregunta
+            async function deleteQuestion(index) {
+                if (confirm('¿Estás seguro de que deseas eliminar esta pregunta?')) {
+                    const q = questions[index];
+
+                    // Identificar publicIds a borrar para limpiar servidor
+                    const pids = [];
+                    if (q.imagePublicId) pids.push(q.imagePublicId);
+                    if (q.narrationPublicId) pids.push(q.narrationPublicId);
+                    if (q.explanationPublicId) pids.push(q.explanationPublicId);
+
+                    if (pids.length > 0) {
+                        showNotification(`Eliminando archivos del servidor...`, 'info');
+                        for (const pid of pids) {
+                            try {
+                                await fetch(`${API_BASE_URL}/api/delete-file`, {
+                                    method: 'DELETE',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ publicId: pid })
+                                });
+                            } catch (error) {
+                                console.warn('Error al borrar asset de pregunta:', pid, error);
+                            }
+                        }
+                    }
+
+                    questions.splice(index, 1);
+                    renderQuestions();
+                    updateProjectSummary();
+                    showNotification('Pregunta y sus archivos eliminados', 'info');
+                }
+            }
+
+            // Guardar pregunta
+            function saveQuestion() {
+                const question = {
+                    question: document.getElementById('qText').value.trim(),
+                    image: document.getElementById('qImageUrl').value.trim(),
+                    imagePublicId: document.getElementById('qImageUrl').dataset.publicId || '',
+                    options: [
+                        document.getElementById('o1').value.trim(),
+                        document.getElementById('o2').value.trim(),
+                        document.getElementById('o3').value.trim(),
+                        document.getElementById('o4').value.trim()
+                    ],
+                    correctIndex: parseInt(document.getElementById('qCorrect').value) || 0,
+                    // NUEVO: Campos de tiempo
+                    countdownSeconds: parseInt(document.getElementById('qCountdownSeconds').value) || 15,
+                    revealSeconds: parseInt(document.getElementById('qRevealSeconds').value) || 3,
+                    narrationUrl: document.getElementById('qNarrationUrl').value.trim(),
+                    narrationPublicId: document.getElementById('qNarrationUrl').dataset.publicId || '',
+                    explanationAudioUrl: document.getElementById('qExplainUrl').value.trim(),
+                    explanationPublicId: document.getElementById('qExplainUrl').dataset.publicId || ''
+                };
+
+                // Validaciones
+                if (!question.question) {
+                    showNotification('La pregunta es obligatoria', 'error');
+                    return;
+                }
+
+                if (question.options.some(opt => !opt)) {
+                    showNotification('Todas las opciones son obligatorias', 'error');
+                    return;
+                }
+
+                if (question.correctIndex < 0 || question.correctIndex > 3) {
+                    showNotification('La respuesta correcta debe estar entre 0 y 3', 'error');
+                    return;
+                }
+
+                // Validaciones para los nuevos campos
+                if (question.countdownSeconds < 1 || question.countdownSeconds > 60) {
+                    showNotification('El tiempo de cuenta regresiva debe estar entre 1 y 60 segundos', 'error');
+                    return;
+                }
+
+                if (question.revealSeconds < 1 || question.revealSeconds > 10) {
+                    showNotification('El tiempo de revelación debe estar entre 1 y 10 segundos', 'error');
+                    return;
+                }
+
+                if (editingIndex > -1) {
+                    questions[editingIndex] = question;
+                    editingIndex = -1;
+                    showNotification('Pregunta actualizada exitosamente', 'success');
+                } else {
+                    questions.push(question);
+                    showNotification('Pregunta agregada exitosamente', 'success');
+                }
+
+                closeQuestionModal();
+                renderQuestions();
+                updateProjectSummary();
+            }
+
+            // Actualizar resumen del proyecto
+            function updateProjectSummary() {
+                const questionsCount = questions.length;
+                // Calcular la duración total considerando el countdownSeconds de cada pregunta
+                let totalDuration = 0;
+                if (questionsCount > 0) {
+                    totalDuration = questions.reduce((sum, q) => {
+                        return sum + (q.countdownSeconds || 15);
+                    }, 0);
+                    // Sumar tiempos fijos: intro (4s) + mid (4s) + final (5s) + tiempo de revelación de cada pregunta
+                    totalDuration += 4 + 4 + 5 + (questionsCount * (questions[0].revealSeconds || 3));
+                }
+
+                const summaryQuestions = document.getElementById('summary-questions');
+                const summaryDuration = document.getElementById('summary-duration');
+                const summaryStatus = document.getElementById('summary-status');
+                const summaryMessage = document.getElementById('summary-message');
+
+                if (summaryQuestions) summaryQuestions.textContent = questionsCount;
+                if (summaryDuration) summaryDuration.textContent = `${totalDuration}s`;
+
+                if (questionsCount === 0) {
+                    if (summaryStatus) summaryStatus.textContent = '✗';
+                    if (summaryMessage) {
+                        summaryMessage.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-exclamation-triangle" style="color: var(--warning);"></i>
+                                <strong>Agrega preguntas primero</strong>
+                            </div>
+                            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                                Necesitas al menos una pregunta para generar el video.
+                            </p>
+                        `;
+                        summaryMessage.style.display = 'block';
+                    }
+                } else {
+                    if (summaryStatus) summaryStatus.textContent = '✓';
+                    if (summaryMessage) {
+                        summaryMessage.innerHTML = `
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                                <strong>Listo para generar</strong>
+                            </div>
+                            <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                                Tu proyecto está listo. Haz clic en "Generar Video".
+                            </p>
+                        `;
+                        summaryMessage.style.borderLeftColor = 'var(--success)';
+                        summaryMessage.style.display = 'block';
+                    }
+                }
+            }
+
+            // Cargar trabajos/videos
+            async function loadJobs() {
+                const container = document.getElementById('jobs-container');
+                container.innerHTML = `
+                    <div class="questions-empty">
+                        <div class="empty-icon">
+                            <i class="fas fa-sync-alt fa-spin"></i>
+                        </div>
+                        <p class="empty-text">Cargando videos...</p>
+                    </div>
+                `;
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/jobs`);
+                    if (!response.ok) throw new Error('Error al cargar videos');
+
+                    const jobs = await response.json();
+
+                    if (jobs.length === 0) {
+                        container.innerHTML = `
+                            <div class="questions-empty">
+                                <div class="empty-icon">
+                                    <i class="fas fa-video"></i>
+                                </div>
+                                <p class="empty-text">No hay videos generados</p>
+                                <p class="empty-text">Genera tu primer video desde la pestaña "Generar"</p>
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    jobs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                    let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
+                    jobs.forEach(job => {
+                        const date = new Date(job.createdAt);
+                        const formattedDate = date.toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+
+                        html += `
+                            <div style="background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <div>
+                                        <strong style="color: var(--primary);">VID-${job.id.slice(0, 8)}</strong>
+                                        <span style="margin-left: 12px; padding: 2px 8px; background: ${job.status === 'done' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)'}; color: ${job.status === 'done' ? 'var(--success)' : 'var(--warning)'}; border-radius: 12px; font-size: 11px;">
+                                            ${job.status === 'done' ? 'Completado' : job.status}
+                                        </span>
+                                    </div>
+                                    <div style="font-size: 12px; color: var(--text-muted);">
+                                        ${formattedDate}
+                                    </div>
+                                </div>
+                                ${job.videoUrl ? `
+                                    <div style="margin-top: 12px;">
+                                        <video controls style="width: 200px; border-radius: 6px;">
+                                            <source src="${job.videoUrl}" type="video/mp4">
+                                        </video>
+                                        <div class="video-actions">
+                                            <button class="btn btn-success btn-sm" onclick="App.downloadVideo('${job.videoUrl}', 'VID-${job.id.slice(0, 8)}.mp4')">
+                                                <i class="fas fa-download"></i> Descargar Video
+                                            </button>
+                                            <button class="btn btn-primary btn-sm" onclick="App.copyToClipboard('${job.videoUrl}')">
+                                                <i class="fas fa-copy"></i> Copiar URL
+                                            </button>
+                                        </div>
+                                    </div>
+                                ` : job.status === 'processing' ? `
+                                    <div style="margin-top: 12px; padding: 16px; background: rgba(245, 158, 11, 0.1); border-radius: 8px; border-left: 3px solid var(--warning);">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <i class="fas fa-spinner fa-spin" style="color: var(--warning);"></i>
+                                            <div>
+                                                <strong>Video en proceso</strong>
+                                                <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                                                    Tu video se está generando. Esto puede tomar unos minutos.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : job.error ? `
+                                    <div style="margin-top: 12px; padding: 16px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border-left: 3px solid var(--danger);">
+                                        <div style="display: flex; align-items: center; gap: 12px;">
+                                            <i class="fas fa-exclamation-triangle" style="color: var(--danger);"></i>
+                                            <div>
+                                                <strong>Error en la generación</strong>
+                                                <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+                                                    ${job.error}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
+                } catch (error) {
+                    container.innerHTML = `
+                        <div class="questions-empty">
+                            <div class="empty-icon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <p class="empty-text">Error al cargar videos</p>
+                            <p class="empty-text">${error.message}</p>
+                            <p class="empty-text">Verifica que el backend esté ejecutándose en ${API_BASE_URL}</p>
+                        </div>
+                    `;
+                }
+            }
+
+            // Copiar al portapapeles
+            function copyToClipboard(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showNotification('URL copiada al portapapeles', 'success');
+                }).catch(err => {
+                    showNotification('Error al copiar: ' + err.message, 'error');
+                });
+            }
+
+            // Descargar video
+            function downloadVideo(videoUrl, filename) {
+                showNotification('Iniciando descarga del video...', 'info');
+
+                // Crear un enlace temporal para la descarga
+                const a = document.createElement('a');
+                a.href = videoUrl;
+                a.download = filename || 'video_quiz.mp4';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                showNotification('Descarga iniciada', 'success');
+            }
+
+            // Construir payload para el backend
+            function buildPayload() {
+                const countdownTexts = JSON.parse(document.getElementById('countdownTexts').value || '["3","2","1","GO!"]');
+
+                return {
+                    config: {
+                        backgroundMusicUrl: document.getElementById('bgMusicUrl').value || '',
+                        backgroundMusicVolume: parseFloat(document.getElementById('bgVolume').value) || 0.2,
+                        backgroundMusicDurationSeconds: parseInt(document.getElementById('bgDuration').value) || 3,
+                        tickAudioUrl: document.getElementById('tickAudioUrl').value || '',
+                        correctAudioUrl: document.getElementById('correctAudioUrl').value || ''
+                    },
+                    intro: {
+                        title: document.getElementById('introTitle').value || 'Evaluemos tus conocimientos',
+                        readyText: document.getElementById('introReadyText').value || '¿Listo?',
+                        countdownTexts: countdownTexts,
+                        backgroundImage: document.getElementById('introImgUrl').value || '',
+                        audioUrl: document.getElementById('introAudioUrl').value || '',
+                        durationSeconds: parseInt(document.getElementById('introDuration').value) || 4
+                    },
+                    questions: questions,
+                    midFinal: {
+                        text: document.getElementById('midText').value || '¿Cuántas preguntas llegaste a responder?',
+                        image: document.getElementById('midImgUrl').value || '',
+                        audioUrl: document.getElementById('midAudioUrl').value || '',
+                        durationSeconds: parseInt(document.getElementById('midDuration').value) || 4
+                    },
+                    finalVideo: {
+                        logo: document.getElementById('finalLogoUrl').value || '',
+                        audioUrl: document.getElementById('finalAudioUrl').value || '',
+                        durationSeconds: parseInt(document.getElementById('finalDuration').value) || 5
+                    }
+                };
+            }
+
+            // Recopilar todos los publicIds del proyecto
+            function collectAllPublicIds() {
+                const publicIds = [];
+
+                // Config
+                const bgMusicId = document.getElementById('bgMusicUrl').dataset.publicId;
+                if (bgMusicId) publicIds.push(bgMusicId);
+                const tickId = document.getElementById('tickAudioUrl').dataset.publicId;
+                if (tickId) publicIds.push(tickId);
+                const correctId = document.getElementById('correctAudioUrl').dataset.publicId;
+                if (correctId) publicIds.push(correctId);
+
+                // Intro
+                const introImgId = document.getElementById('introImgUrl').dataset.publicId;
+                if (introImgId) publicIds.push(introImgId);
+                const introAudioId = document.getElementById('introAudioUrl').dataset.publicId;
+                if (introAudioId) publicIds.push(introAudioId);
+
+                // Mid
+                const midImgId = document.getElementById('midImgUrl').dataset.publicId;
+                if (midImgId) publicIds.push(midImgId);
+                const midAudioId = document.getElementById('midAudioUrl').dataset.publicId;
+                if (midAudioId) publicIds.push(midAudioId);
+
+                // Final
+                const finalLogoId = document.getElementById('finalLogoUrl').dataset.publicId;
+                if (finalLogoId) publicIds.push(finalLogoId);
+                const finalAudioId = document.getElementById('finalAudioUrl').dataset.publicId;
+                if (finalAudioId) publicIds.push(finalAudioId);
+
+                // Questions
+                questions.forEach(q => {
+                    if (q.imagePublicId) publicIds.push(q.imagePublicId);
+                    if (q.narrationPublicId) publicIds.push(q.narrationPublicId);
+                    if (q.explanationPublicId) publicIds.push(q.explanationPublicId);
+                });
+
+                return publicIds;
+            }
+
+            // Limpiar todos los assets de Cloudinary
+            async function cleanupAllAssets() {
+                const publicIds = collectAllPublicIds();
+
+                if (publicIds.length === 0) {
+                    console.log('No hay archivos para limpiar');
+                    return;
+                }
+
+                showNotification(`Limpiando ${publicIds.length} archivos del servidor...`, 'info');
+
+                for (const pid of publicIds) {
+                    try {
+                        await fetch(`${API_BASE_URL}/api/delete-file`, {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ publicId: pid })
+                        });
+                    } catch (error) {
+                        console.warn('Error al eliminar archivo:', pid, error);
+                    }
+                }
+
+                showNotification('Archivos limpiados del servidor', 'success');
+            }
+
+            // Resetear completamente el frontend
+            function resetFrontend() {
+                // Limpiar config
+                document.getElementById('bgMusicUrl').value = '';
+                document.getElementById('bgMusicUrl').dataset.publicId = '';
+                document.getElementById('bgMusicFile').value = '';
+                document.getElementById('bgMusicPreview').style.display = 'none';
+                document.getElementById('bgVolume').value = '0.2';
+                document.getElementById('bgDuration').value = '3';
+
+                document.getElementById('tickAudioUrl').value = '';
+                document.getElementById('tickAudioUrl').dataset.publicId = '';
+                document.getElementById('tickAudioFile').value = '';
+                document.getElementById('tickAudioPreview').style.display = 'none';
+
+                document.getElementById('correctAudioUrl').value = '';
+                document.getElementById('correctAudioUrl').dataset.publicId = '';
+                document.getElementById('correctAudioFile').value = '';
+                document.getElementById('correctAudioPreview').style.display = 'none';
+
+                // Limpiar intro
+                document.getElementById('introTitle').value = '';
+                document.getElementById('introReadyText').value = '';
+                document.getElementById('countdownSeconds').value = '3';
+                document.getElementById('introImgUrl').value = '';
+                document.getElementById('introImgUrl').dataset.publicId = '';
+                document.getElementById('introImgFile').value = '';
+                document.getElementById('introImgPreview').style.display = 'none';
+                document.getElementById('introAudioUrl').value = '';
+                document.getElementById('introAudioUrl').dataset.publicId = '';
+                document.getElementById('introAudioFile').value = '';
+                document.getElementById('introAudioPreview').style.display = 'none';
+                document.getElementById('introDuration').value = '4';
+
+                // Limpiar mid
+                document.getElementById('midText').value = '';
+                document.getElementById('midImgUrl').value = '';
+                document.getElementById('midImgUrl').dataset.publicId = '';
+                document.getElementById('midImgFile').value = '';
+                document.getElementById('midImgPreview').style.display = 'none';
+                document.getElementById('midAudioUrl').value = '';
+                document.getElementById('midAudioUrl').dataset.publicId = '';
+                document.getElementById('midAudioFile').value = '';
+                document.getElementById('midAudioPreview').style.display = 'none';
+                document.getElementById('midDuration').value = '4';
+
+                // Limpiar final
+                document.getElementById('finalLogoUrl').value = '';
+                document.getElementById('finalLogoUrl').dataset.publicId = '';
+                document.getElementById('finalLogoFile').value = '';
+                document.getElementById('finalLogoPreview').style.display = 'none';
+                document.getElementById('finalAudioUrl').value = '';
+                document.getElementById('finalAudioUrl').dataset.publicId = '';
+                document.getElementById('finalAudioFile').value = '';
+                document.getElementById('finalAudioPreview').style.display = 'none';
+                document.getElementById('finalDuration').value = '5';
+
+                // Limpiar preguntas
+                questions = [];
+                renderQuestions();
+                updateProjectSummary();
+
+                showNotification('Proyecto reiniciado - Listo para un nuevo video', 'success');
+            }
+
+            // Iniciar renderizado
+            async function startRender() {
+                if (questions.length === 0) {
+                    showNotification('Agrega al menos una pregunta antes de generar el video', 'error');
+                    showModule('questions');
+                    return;
+                }
+
+                const payload = buildPayload();
+                const renderBtn = document.getElementById('renderBtn');
+
+                renderBtn.disabled = true;
+                renderBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/render-video`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.text();
+                        throw new Error(error || `Error ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    currentJobId = data.jobId;
+
+                    showNotification('Renderizado iniciado. Monitoreando progreso...', 'success');
+
+                    // Iniciar polling del estado
+                    pollRenderStatus(data.jobId);
+                } catch (error) {
+                    showNotification('Error al iniciar renderizado: ' + error.message, 'error');
+                } finally {
+                    renderBtn.disabled = false;
+                    renderBtn.innerHTML = '<i class="fas fa-play"></i> Generar Video';
+                }
+            }
+
+            // Polling del estado del renderizado
+            async function pollRenderStatus(jobId) {
+                const maxAttempts = 120; // 10 minutos máximo (cada 5 segundos)
+                let attempts = 0;
+
+                const poll = async () => {
+                    if (attempts >= maxAttempts) {
+                        showNotification('Tiempo de espera agotado. Verifica manualmente en Videos', 'warning');
+                        return;
+                    }
+
+                    attempts++;
+
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/api/render-status/${jobId}`);
+                        if (!response.ok) {
+                            console.warn('Error al consultar estado del render');
+                            setTimeout(poll, 5000);
+                            return;
+                        }
+
+                        const status = await response.json();
+
+                        if (status.videoUrl) {
+                            // Video completado exitosamente
+                            showNotification('¡Video generado exitosamente! Limpiando archivos...', 'success');
+
+                            // Ejecutar limpieza
+                            await cleanupAllAssets();
+                            resetFrontend();
+
+                            // Ir a la pestaña de videos
+                            setTimeout(() => {
+                                showModule('jobs');
+                                loadJobs();
+                            }, 1500);
+                        } else if (status.status === 'failed' || status.error) {
+                            // Falló el renderizado
+                            showNotification('Error en la generación del video', 'error');
+                        } else {
+                            // Aún procesando
+                            setTimeout(poll, 5000);
+                        }
+                    } catch (error) {
+                        console.error('Error al consultar estado:', error);
+                        setTimeout(poll, 5000);
+                    }
+                };
+
+                // Iniciar polling después de 5 segundos
+                setTimeout(poll, 5000);
+            }
+
+            return {
+                init,
+                showModule,
+                showNotification,
+                handleFileUpload,
+                handleModalFileUpload,
+                removeFile,
+                removeModalFile,
+                openQuestionModal,
+                closeQuestionModal,
+                saveQuestion,
+                loadJobs,
+                copyToClipboard,
+                downloadVideo,
+                startRender,
+                generateCountdown,
+                renderQuestions,
+                editQuestion,
+                deleteQuestion
+            };
+        })();
+
+        document.addEventListener('DOMContentLoaded', App.init);
+    </script>
+
+</body>
+
+</html>
